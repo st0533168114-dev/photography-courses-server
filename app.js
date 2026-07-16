@@ -37,9 +37,10 @@ app.use('/images', express.static(path.join(__dirname, 'Images/OutImages')));
 //************** */
 
 
-//פורט להאזנה
-app.listen(1234, () => {
-  console.log("running port:1234");
+// הגדרת פורט שרת מתוך משתני סביבה או שימוש בבררת מחדל-כדי שירוץ ברנדר
+const PORT = process.env.PORT || 1234;
+app.listen(PORT, () => {
+  console.log(`running port:${PORT}`);
 });
 const connectDB = async () => {
   try {
