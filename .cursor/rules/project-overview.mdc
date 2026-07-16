@@ -1,0 +1,39 @@
+---
+description: מבנה הפרויקט, ארכיטקטורה, סגנון קוד וטכנולוגיות
+alwaysApply: true
+---
+
+# שרת קורסים דיגיטליים – סקירת פרויקט
+
+## טכנולוגיות
+Node.js | Express 5 | MongoDB (Mongoose 9) | JWT | bcrypt | cors | dotenv | axios
+פורט **1234** | משתני סביבה: `MONGO_URI`, `JWT_SECRET` (ב-`.env`)
+
+## מבנה תיקיות
+- `app.js` – נקודת כניסה: express, חיבור DB, CORS, JSON, routers, תמונות סטטיות
+- `config.js` – הגדרות (MONGO_URI)
+- `Models/` – סכמות Mongoose: user, course, category, order, shoppingCart, payment, faq
+- `Routers/` – הגדרת נתיבים (`*.router.js`) → קונטרולר + middleware
+- `Controllers/` – לוגיקה עסקית (`*.controller.js`) – אובייקט עם מתודות async
+- `Middlewares/` – `jwt.middleware.js`, `isAdmin.middleware.js`
+- `Images/OutImages/` – תמונות, מוגשות ב-`/images`
+
+## ארכיטקטורה
+שכבות: **Router → Middleware → Controller → Model**
+- Routers רושמים נתיבים בלבד; לוגיקה ב-Controllers
+- JWT מאמת `Authorization: Bearer <token>` → `req.user = { userId, role }`
+- `isAdminMiddleware` לפעולות ניהול; הרשאות מעורבות נבדקות בקונטרולר
+- נתיבי API: `/users`, `/orders`, `/courses`, `/shoppingCarts`, `/payments`, `/categories`, `/faq`
+
+## מוסכמות שמות
+- קבצים: `entity.router.js`, `entity.controller.js`, `entity.js` (Model)
+- Controllers: `XxxController = { get, getById, post, put, delete, ... }` + `export default`
+- Routers: `XxxRouter = express.Router()` + `export default`
+- Models: `XxxSchema` → `mongoose.model("collectionPlural", Schema)`
+- שדות: camelCase (`firstName`, `userId`, `categoryName`)
+
+## סגנון קוד
+- ES Modules: `import`/`export` עם סיומת `.js` בנתיבים
+- `async/await` + `try/catch`; תגובות JSON עם קודי סטטוס (200/401/403/404/500)
+- הערות בעברית בקוד קיים – לשמור עליהן, לא למחוק
+- שינויים מינימליים; התאמה לדפוסים קיימים בפרויקט
