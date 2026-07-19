@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import payments from "../Models/payment.js";
 
-// לוגיקה פנימית ליצירת תשלום - נקראת גם ישירות מ-OrdersController, בלי דרך Express
+// לוגיקה פנימית ליצירת תשלום - נקראת גם ישירות מ-OrdersController
 async function createPayment({ orderId, paymentDate, status, paymentNumber, paymentMethod, transactionId }) {
   const newPayment = new payments({
     orderId,

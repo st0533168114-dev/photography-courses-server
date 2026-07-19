@@ -4,7 +4,7 @@ import isAdminMiddleware from "../Middlewares/isAdmin.middleware.js"; // ייב�
 
 import PaymentsController from "../Controllers/payments.controller.js";
 const PaymentsRouter = express.Router();
-//לא בדקתי אחרי הוספת גוט
+
 PaymentsRouter.get("/", jwtMiddleware, isAdminMiddleware, PaymentsController.get);
 PaymentsRouter.get("/:id", jwtMiddleware, PaymentsController.getById);
 PaymentsRouter.post("/", jwtMiddleware, PaymentsController.post);

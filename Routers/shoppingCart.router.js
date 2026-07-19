@@ -5,9 +5,7 @@ import isAdminMiddleware from "../Middlewares/isAdmin.middleware.js";
 const ShoppingCartsRouter = express.Router();
 
 
-//למנהל
 ShoppingCartsRouter.get("/admin/all",jwtMiddleware,isAdminMiddleware,ShoppingCartsController.getAllCarts);
-//למשתמש
 ShoppingCartsRouter.get("/", jwtMiddleware, ShoppingCartsController.getByUserId);
 ShoppingCartsRouter.post("/items", jwtMiddleware, ShoppingCartsController.addToCart);
 ShoppingCartsRouter.delete("/items/:courseId", jwtMiddleware, ShoppingCartsController.removeFromCart);

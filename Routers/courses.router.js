@@ -1,7 +1,7 @@
 import express from "express";
 import CoursesController from "../Controllers/courses.controller.js";
-import jwtMiddleware from "../Middlewares/jwt.middleware.js"; // ייבוא ה-Middleware
-import isAdminMiddleware from "../Middlewares/isAdmin.middleware.js"; // ייבוא ה-Middleware
+import jwtMiddleware from "../Middlewares/jwt.middleware.js";
+import isAdminMiddleware from "../Middlewares/isAdmin.middleware.js"; 
 const CoursesRouter = express.Router();
 
 CoursesRouter.get("/", CoursesController.get);

@@ -1,4 +1,4 @@
-import faqs from "../Models/faq.js"; // השם נשאר בדיוק כפי שביקשת
+import faqs from "../Models/faq.js"; 
 
 const FaqController = {
   get: async (req, res) => {
@@ -20,13 +20,13 @@ const FaqController = {
       await newFaq.save();
       res.status(201).json(newFaq);
     } catch (error) {
-      res.status(500).json({ error: error.message }); // שיפור הטיפול בשגיאה
+      res.status(500).json({ error: error.message }); 
     }
   },
 
  put: async (req, res) => {
   const { id } = req.params;
-  const { question, answer } = req.body; // חילוץ מפורש - מונע העברת _id או שדות זבל
+  const { question, answer } = req.body; 
   try {
     // מעבירים אובייקט שמכיל רק את השדות המותרים לעדכון
     const updatedFaq = await faqs.findByIdAndUpdate(
@@ -56,7 +56,7 @@ const FaqController = {
       }
       res.status(200).json(deletedFaq);
     } catch (error) {
-      res.status(500).json({ error: error.message }); // שיפור הטיפול בשגיאה
+      res.status(500).json({ error: error.message }); 
     }
   },
 };

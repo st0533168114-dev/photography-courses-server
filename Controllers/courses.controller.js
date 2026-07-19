@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import courses from "../Models/course.js";
 
-//לטפל באבטחה של קורסססס אי אפשר לצפות בכולו אם לא שלמת אלא רק בתצוגה "מלמעלה"באתר
 const CoursesController = {
   get: async (req, res) => {
     try {
@@ -85,8 +84,7 @@ const CoursesController = {
       res.status(500).json({ error: error.message });
     }
   },
-  //מאיפה האי די מגיע????
-  //אמרו לי שבכלל לא צריך-לוודא
+//כרגע לא בשמוש
   getByCategoryId: async (req, res) => {
     const id = req.params.id;
     try {

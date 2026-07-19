@@ -4,7 +4,6 @@ import isAdminMiddleware from "../Middlewares/isAdmin.middleware.js"; // ייב�
 
 import CategoriesController from "../Controllers/category.controller.js";
 const CategoriesRouter = express.Router();
-//לא בדקתי אחרי הוספת גוט
 
 CategoriesRouter.get("/", CategoriesController.get);
 CategoriesRouter.get("/:id", CategoriesController.getById);
