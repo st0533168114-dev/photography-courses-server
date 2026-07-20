@@ -7,7 +7,8 @@ const PaymentsRouter = express.Router();
 
 PaymentsRouter.get("/", jwtMiddleware, isAdminMiddleware, PaymentsController.get);
 PaymentsRouter.get("/:id", jwtMiddleware, PaymentsController.getById);
-PaymentsRouter.post("/", jwtMiddleware, PaymentsController.post);
+// חסימת הגישה ליצירת תשלום באופן ידני כך שתהיה מותרת למנהלים בלבד
+PaymentsRouter.post("/", jwtMiddleware, isAdminMiddleware, PaymentsController.post);
 PaymentsRouter.put("/:id", jwtMiddleware, isAdminMiddleware, PaymentsController.put);
 PaymentsRouter.delete("/:id", jwtMiddleware, isAdminMiddleware, PaymentsController.delete);
 export default PaymentsRouter;
