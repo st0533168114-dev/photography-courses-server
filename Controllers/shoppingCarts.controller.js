@@ -3,16 +3,17 @@ import shoppingCarts from "../Models/shoppingCart.js";
 import course from "../Models/course.js";
 
 const ShoppingCartsController = {
-  //שינית אותה לבדוק שעובדת(אם אין עגלה יוצרת ריקה!)
 
   getAllCarts: async (req, res) => {
     try {
       const shoppingCartsList = await shoppingCarts.find({});
       res.status(200).json(shoppingCartsList);
     } catch (error) {
-      res.status(500).json({ error: error });
+      console.error(error);
+      res.status(500).json({ error: "Failed to fetch shopping carts" });
     }
   },
+
   getByUserId: async (req, res) => {
     const userId = req.user.userId;
     try {
@@ -22,68 +23,21 @@ const ShoppingCartsController = {
       }
       res.status(200).json(shoppingCart);
     } catch (error) {
-      res.status(500).json({ error: error });
+      console.error(error);
+      res.status(500).json({ error: "Failed to fetch shopping cart" });
     }
   },
-  //כנראה מיותר כי יוצרים בגט עגלה ריקה אם צריך
-  // post:async(req,res)=>{
-  //     const {
-  //         userId,
-  //         courseList  }=req.body;
-  //     try{
-  // const calculatedSubtotal=courseList.reduce((sum,course)=>sum+course.price,0);
 
-  //       const newShoppingCart = new shoppingCarts({
-  //         userId,
-  //         subtotal:calculatedSubtotal,
-  //         courseList
-  //       })
-  //       await newShoppingCart.save();
-  //     //   const shoppingCartsList= await shoppingCarts.find({})
-  //       //res.status(200).json(shoppingCartsList)
-  //       res.status(200).json(newShoppingCart )//?
-  //     }
-  //     catch(error){
-  //      res.status(500).json({error:error})
-  //     }
-  // },
-
-  //גם פוט לכאורה מיותר גם אם לא להתאים את המבנה שלו!!!
-  // put: async (req, res) => {
-  //   const { id } = req.params;
-  //   const shoppingCart = req.body;
-  //   try {
-  //     if (shoppingCart.courseList) {
-  //       shoppingCart.subtotal = shoppingCart.courseList.reduce(
-  //         (sum, course) => sum + course.price,
-  //         0
-  //       );
-  //     }
-  //     const updateShoppingCart = await shoppingCarts.findByIdAndUpdate(id, shoppingCart, {
-  //       new: true,
-  //     });
-  //     if (!updateShoppingCart) {
-  //       return res.status(404).json({ message: "Shopping cart not found" });
-  //     }
-  //     //??
-  //     // const shoppingCartsList=await shoppingCarts.find({});
-  //     //res.status(200).json(shoppingCartsList);
-  //     res.status(200).json(updateShoppingCart); //?
-  //   } catch (error) {
-  //     res.status(500).json({ error: "ShoppingCart update failed" + error });
-  //   }
-  // },
-
-  // מוחקת את כל הקורסים מהעגלה (מרוקנת אותה)
+ 
   clearCart: async (req, res) => {
     const userId = req.user.userId;
     try {
       const updateShoppingCart = await shoppingCarts.findOneAndUpdate(
         { userId: userId },
-        { $set: { courseList: [], subtotal: 0 } }, //שינוי רק של הערכים האלו באוביקט:
+        { $set: { courseList: [], subtotal: 0 } },// שינוי רק של הערכים האלו באוביקט במקום למחוק את העגלה
         {
           new: true,
-          runValidators: true, // כדי לבצע ולידציה- זה לא קורה אוטומטית בעדכון
+          runValidators: true,
         }
       );
       if (!updateShoppingCart) {
@@ -91,79 +45,71 @@ const ShoppingCartsController = {
       }
       res.status(200).json(updateShoppingCart);
     } catch (error) {
-      res.status(500).json({ error: "clear cart failed" + error });
+      console.error(error);
+      res.status(500).json({ error: "Clear cart failed" });
     }
   },
-
 
   addToCart: async (req, res) => {
     const userId = req.user.userId;
     const { courseId } = req.body;
+
+    if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ message: "Invalid or missing course id" });
+    }
+
     try {
       const courseDetails = await course.findById(courseId);
       if (!courseDetails) {
         return res.status(404).json({ message: "Course not found" });
       }
-      // בודק אם כבר קיימת עגלה למשתמש לפני שמוסיפים לקורס חדש
-      const currentShoppingCart = await shoppingCarts.findOne({ userId: userId });
 
-      if (currentShoppingCart) {
-        // בודק אם הקורס כבר נמצא בעגלה כדי למנוע כפילות
-        const isCourseInShoppingCart = currentShoppingCart.courseList.some(
-          (course) => course.courseId.toString() === courseId
-        );
+      // שלב 1: נוודא שיש עגלה למשתמש, אם אין ניצור עגלה ריקה
+      await shoppingCarts.findOneAndUpdate(
+        { userId: userId },
+        { $setOnInsert: { userId: userId, courseList: [], subtotal: 0 } },
+        { upsert: true }
+      );
 
-        if (isCourseInShoppingCart) {
-          // אם הקורס כבר קיים, מחזירים את העגלה בלי לבצע שינויים נוספים
-          return res.status(200).json(currentShoppingCart);
-        }
-
-        // אם העגלה קיימת אבל הקורס עדיין לא בה, מוסיפים אותו אליה בלי ליצור עגלה חדשה
-        const updatedShoppingCart = await shoppingCarts.findOneAndUpdate(
-          { userId: userId },
-          {
-            $push: {
-              courseList: {
-                courseId: courseId,
-                courseName: courseDetails.courseName,
-                price: courseDetails.price,
-                courseImage: courseDetails.courseImage,
-              },
+      // שלב 2: נוסיף את הקורס לעגלה רק אם הוא לא קיים בה כבר
+      const updatedCart = await shoppingCarts.findOneAndUpdate(
+        {
+          userId: userId,
+          "courseList.courseId": { $ne: new mongoose.Types.ObjectId(courseId) },
+        },
+        {
+          $push: {
+            courseList: {
+              courseId: courseId,
+              courseName: courseDetails.courseName,
+              price: courseDetails.price,
+              courseImage: courseDetails.courseImage,
             },
-            // מוסיף את מחיר הקורס לסכום הכולל של העגלה
-            $inc: { subtotal: courseDetails.price },
           },
-          {
-            new: true,
-            runValidators: true,
-          }
-        );
+          $inc: { subtotal: courseDetails.price },
+        },
+        { new: true }
+      );
 
-        return res.status(200).json(updatedShoppingCart);
+      // אם העגלה לא התעדכנה, זה אומר שהקורס כבר קיים בה
+      if (!updatedCart) {
+        const existingCart = await shoppingCarts.findOne({ userId: userId });
+        return res.status(200).json(existingCart);
       }
 
-      // אם לא קיימת עגלה בכלל, נוצרת עגלה חדשה רק כאשר באמת מתווסף קורס בפעם הראשונה
-      const newShoppingCart = await shoppingCarts.create({
-        userId,
-        subtotal: courseDetails.price,
-        courseList: [
-          {
-            courseId: courseId,
-            courseName: courseDetails.courseName,
-            price: courseDetails.price,
-            courseImage: courseDetails.courseImage,
-          },
-        ],
-      });
-
-      res.status(200).json(newShoppingCart);
+      return res.status(200).json(updatedCart);
     } catch (error) {
-      res.status(500).json({ error: "add to cart failed" + error });
+      console.error(error);
+      res.status(500).json({ error: "Add to cart failed" });
     }
   },
   removeFromCart: async (req, res) => {
     const userId = req.user.userId;
     const { courseId } = req.params;
+    // תיקון: ולידציה על courseId שמגיע מה-params
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ message: "Invalid course id" });
+    }
     try {
       //מציאת העגלה כדי לדעת מה המחיר של הקורס שאני רוצה למחוק
       const currentShoppingCart = await shoppingCarts.findOne({ userId: userId });
@@ -200,5 +146,22 @@ const ShoppingCartsController = {
   },
 
 };
+ 
 
 export default ShoppingCartsController;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
