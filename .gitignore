@@ -19,6 +19,5 @@ logs/
 .idea/
 .DS_Store
 
-# Images uploaded locally
+# תמונות גולמיות מקומיות בלבד (לא נדרשות בשרת החי)
 Images/InImages/
-Images/OutImages/
