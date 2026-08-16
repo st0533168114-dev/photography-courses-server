@@ -1,12 +1,12 @@
-# מירלה כהן - קורסי צילום | שרת
+# Mirela Cohen - Photography Courses | Server
 
-שרת REST API עבור אתר מכירת קורסי צילום דיגיטליים. כולל ניהול משתמשים עם אימות JWT, קטלוג קורסים וקטגוריות, עגלת קניות, הזמנות ותשלומים, ופאנל ניהול למנהלים.
+REST API server for a digital photography courses sales website. Includes user management with JWT authentication, course and category catalog, shopping cart, orders and payments, and an admin management panel.
 
-## טכנולוגיות
+## Technologies
 
 Node.js · Express 5 · MongoDB (Mongoose) · JWT · bcrypt · cors · dotenv
 
-## התקנה והרצה
+## Installation & Running
 
 ```bash
 git clone https://github.com/st0533168114-dev/photography-courses-server.git
@@ -15,28 +15,31 @@ npm install
 npm start
 ```
 
-השרת יאזין בכתובת `http://localhost:1234`.
+The server will listen on `http://localhost:1234`.
 
-## משתני סביבה
+## Environment Variables
 
-יש ליצור קובץ `.env` בתיקיית השרת:
-
-```
-MONGO_URI=<connection string ל-MongoDB>
-JWT_SECRET=<סוד לחתימת טוקנים>
-```
-
-## מבנה עיקרי
+Create a `.env` file in the server directory:
 
 ```
-├── app.js          # נקודת כניסה: express, DB, CORS, ראוטרים
-├── Routers/        # הגדרת נתיבי API
-├── Controllers/     # לוגיקה עסקית
-├── Models/          # סכמות Mongoose
-├── Middlewares/      # אימות JWT והרשאות אדמין
-└── Images/           # תמונות קורסים
+MONGO_URI=<MongoDB connection string>
+JWT_SECRET=<secret for signing tokens>
 ```
 
-## נתיבי API עיקריים
+## Main Structure
+
+```
+├── app.js          # Entry point: express, DB, CORS, routers
+├── Routers/        # API route definitions
+├── Controllers/     # Business logic
+├── Models/          # Mongoose schemas
+├── Middlewares/      # JWT authentication and admin authorization
+└── Images/           # Course images
+```
+
+## Main API Routes
 
 `/users` · `/courses` · `/categories` · `/shoppingCarts` · `/orders` · `/payments` · `/faq`
+
+## Related Repository
+- [Photography Courses Client (React)](https://github.com/st0533168114-dev/photography-courses-client)
