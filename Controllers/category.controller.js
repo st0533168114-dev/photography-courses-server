@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import categories from "../Models/category.js";
+import courses from "../Models/course.js";
 
 const CategoriesController = {
   get: async (req, res) => {
@@ -57,6 +58,12 @@ const CategoriesController = {
   delete: async (req, res) => {
     const id = req.params.id;
     try {
+      // בדיקה: יש קורסים עם הcategoryId הזה?
+      const coursesCount = await courses.countDocuments({ categoryId: id });
+      if (coursesCount > 0) {
+        return res.status(400).json({ message: "לא ניתן למחוק קטגוריה שיש בה קורסים" });
+      }
+
       const deletedCategory = await categories.findByIdAndDelete(id);
       if (!deletedCategory) {
         return res.status(404).json({ message: "Category not found" });
