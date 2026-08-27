@@ -10,7 +10,13 @@ const OrdersController = {
   //כל ההזמנות עבור מנהל
   get: async (req, res) => {
     try {
-      const ordersList = await orders.find({}).sort({ orderDate: -1 });
+      const filter = req.query.userId ? { userId: req.query.userId } : {};
+
+      const ordersList = await orders
+        .find(filter)
+        .populate("userId", "firstName lastName email")
+        .populate("paymentsList")
+        .sort({ orderDate: -1 });
       res.status(200).json(ordersList);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -31,11 +37,14 @@ const OrdersController = {
     const userId = req.user.userId;
     const userRole = req.user.role;
     try {
-      const order = await orders.findById(orderId);
+      const order = await orders
+        .findById(orderId)
+        .populate("userId", "firstName lastName email")
+        .populate("paymentsList");
       if (!order) {
         return res.status(404).json({ message: "Order not found" });
       }
-      if (order.userId.toString() !== userId && userRole !== "admin") {
+      if (order.userId?._id.toString() !== userId && userRole !== "admin") {
         return res.status(403).json({ message: "Unauthorized to view this order" });
       }
       res.status(200).json(order);
