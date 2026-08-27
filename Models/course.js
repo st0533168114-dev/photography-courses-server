@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 const { ObjectId } = mongoose.Schema.Types;
+
+// קורס בקטלוג. categoryId מקשר ל-categories, והמחיר כאן הוא מקור האמת בעת יצירת הזמנה
 const CourseSchema = mongoose.Schema({
   courseName: {
     type: String,
@@ -11,16 +13,19 @@ const CourseSchema = mongoose.Schema({
     min: 0,
   },
   youtubeLink: String,
+  // תמונת ברירת מחדל כדי שקורס בלי תמונה לא ישבור את התצוגה בלקוח
   courseImage: {
     type: String,
     required: true,
+    trim: true,
     default: "ImagesOutImages0738_-canon_600.jpeg",
   },
   categoryId: {
     type: ObjectId,
-    ref: "categories", // ????
+    ref: "categories",
     required: true,
   },
+  // קורס שאינו available נחסם לרכישה ביצירת הזמנה (orders.controller)
   status: {
     type: String,
     enum: ["available", "notAvailable"],
@@ -28,8 +33,7 @@ const CourseSchema = mongoose.Schema({
   },
   courseDescription: {
     type: String,
-    // required: true//?????????????
-     default: "",//?
+     default: "",
   },
   courseContent: {
     type: [String],

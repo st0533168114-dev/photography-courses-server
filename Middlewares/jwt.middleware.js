@@ -8,7 +8,7 @@ const jwtMiddleware = (req, res, next) => {
       message: "Unauthorized",
     });
   }
-  const token = authHeader.slice(7);
+  const token = authHeader.slice(7); // הסרת הקידומת "Bearer " שבתחילת הכותרת
   try {
     const decoded = jwt.verify(token, secretKey);
     req.user = {

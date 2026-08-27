@@ -43,7 +43,7 @@ const CategoriesController = {
     try {
       const updatedCategory = await categories.findByIdAndUpdate(id, category, {
         new: true,
-        runValidators: true, // כדי לבצע ולידציה - זה לא קורה אוטומטית בעדכון
+        runValidators: true, // Mongoose לא מריץ ולידציה בעדכון אלא אם מבקשים במפורש
       });
 
       if (!updatedCategory) {
@@ -58,7 +58,7 @@ const CategoriesController = {
   delete: async (req, res) => {
     const id = req.params.id;
     try {
-      // בדיקה: יש קורסים עם הcategoryId הזה?
+      // חסימת המחיקה כדי לא להשאיר קורסים שמצביעים על קטגוריה שאינה קיימת
       const coursesCount = await courses.countDocuments({ categoryId: id });
       if (coursesCount > 0) {
         return res.status(400).json({ message: "לא ניתן למחוק קטגוריה שיש בה קורסים" });

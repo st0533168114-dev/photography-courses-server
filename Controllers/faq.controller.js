@@ -10,6 +10,19 @@ const FaqController = {
     }
   },
 
+  getById: async (req, res) => {
+    const { id } = req.params;
+    try {
+      const faq = await faqs.findById(id);
+      if (!faq) {
+        return res.status(404).json({ message: "Faq not found" });
+      }
+      res.status(200).json(faq);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
   post: async (req, res) => {
     const { question, answer } = req.body;
     try {
@@ -28,13 +41,13 @@ const FaqController = {
   const { id } = req.params;
   const { question, answer } = req.body; 
   try {
-    // מעבירים אובייקט שמכיל רק את השדות המותרים לעדכון
+    // עדכון שדות מפורשים ולא req.body ישירות, כדי שהלקוח לא יוכל לשנות שדות שלא נועדו לכך
     const updatedFaq = await faqs.findByIdAndUpdate(
       id,
       { question, answer },
       {
         new: true,
-        runValidators: true, // כדי לבצע ולידציה - זה לא קורה אוטומטית בעדכון
+        runValidators: true, // Mongoose לא מריץ ולידציה בעדכון אלא אם מבקשים במפורש
       }
     );
 

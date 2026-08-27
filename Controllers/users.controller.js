@@ -1,10 +1,10 @@
-//לכאורה בגוט נשאר רק המידלוור
 import mongoose from "mongoose";
 import users from "../Models/user.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 const secretKey = process.env.JWT_SECRET;
-//לצורך אבטחה-כדי שאם המשתמש לא קיים זמן התגובה יהיה זהה לזמן התגובה של סיסמה שגויה וכך תוקף לא יוכל להבדיל בינהם ש
+// כשהמשתמש לא קיים משווים מול hash מדומה, כדי שזמן התגובה יהיה זהה לזה של סיסמה שגויה
+// ותוקף לא יוכל להסיק מכך אילו שמות משתמש קיימים
 const DUMMY_HASH = "$2b$10$cvyu/pR27Zu4Y0L1H4Dp/u8KNKlHjvgKH9uJVk6vh9zQqMA6NEEkG";
 
 const SALT_ROUNDS = 10;
@@ -55,7 +55,6 @@ const UsersController = {
     try {
       const existingUser = await users.findOne({ $or: [{ email }, { userName }] });
       if (existingUser) {
-        //  שגיאה - האימייל או שם המשתמש כבר תפוסים
         return res.status(400).json({ message: "Email or username already exists" });
       }
 
@@ -109,7 +108,7 @@ const UsersController = {
       }
       const updatedUser = await users.findByIdAndUpdate(id, user, {
         new: true,
-        runValidators: true, // כדי לבצע ולידציה - זה לא קורה אוטומטית בעדכון
+        runValidators: true, // Mongoose לא מריץ ולידציה בעדכון אלא אם מבקשים במפורש
       });
 
       if (!updatedUser) {

@@ -6,6 +6,7 @@ import FaqController from "../Controllers/faq.controller.js";
 const FaqRouter = express.Router();
 
 FaqRouter.get("/", FaqController.get);
+FaqRouter.get("/:id", FaqController.getById);
 FaqRouter.post("/", jwtMiddleware, isAdminMiddleware, FaqController.post);
 FaqRouter.put("/:id", jwtMiddleware, isAdminMiddleware, FaqController.put);
 FaqRouter.delete("/:id", jwtMiddleware, isAdminMiddleware, FaqController.delete);

@@ -18,6 +18,7 @@ const ShoppingCartsController = {
     const userId = req.user.userId;
     try {
       const shoppingCart = await shoppingCarts.findOne({ userId: userId });
+      // מוחזרת עגלה ריקה ולא 404, כדי שהלקוח יוכל להציג עגלה גם למשתמש שטרם יצר אחת
       if (!shoppingCart) {
         return res.status(200).json({ userId, subtotal: 0, courseList: [] });
       }
@@ -28,13 +29,14 @@ const ShoppingCartsController = {
     }
   },
 
- 
+
   clearCart: async (req, res) => {
     const userId = req.user.userId;
     try {
       const updateShoppingCart = await shoppingCarts.findOneAndUpdate(
         { userId: userId },
-        { $set: { courseList: [], subtotal: 0 } },// שינוי רק של הערכים האלו באוביקט במקום למחוק את העגלה
+        // איפוס השדות במקום מחיקת המסמך, כדי שהמשתמש ימשיך להחזיק באותה עגלה
+        { $set: { courseList: [], subtotal: 0 } },
         {
           new: true,
           runValidators: true,
@@ -64,14 +66,14 @@ const ShoppingCartsController = {
         return res.status(404).json({ message: "Course not found" });
       }
 
-      // שלב 1: נוודא שיש עגלה למשתמש, אם אין ניצור עגלה ריקה
+      // יצירת העגלה מופרדת מההוספה: upsert יחד עם תנאי ה-$ne שלמטה היה יוצר עגלה נוספת
+      // כשהקורס כבר קיים, במקום להימנע מהוספה
       await shoppingCarts.findOneAndUpdate(
         { userId: userId },
         { $setOnInsert: { userId: userId, courseList: [], subtotal: 0 } },
         { upsert: true }
       );
 
-      // שלב 2: נוסיף את הקורס לעגלה רק אם הוא לא קיים בה כבר
       const updatedCart = await shoppingCarts.findOneAndUpdate(
         {
           userId: userId,
@@ -91,7 +93,7 @@ const ShoppingCartsController = {
         { new: true }
       );
 
-      // אם העגלה לא התעדכנה, זה אומר שהקורס כבר קיים בה
+      // תוצאה ריקה כאן משמעותה שהתנאי לא התקיים, כלומר הקורס כבר בעגלה
       if (!updatedCart) {
         const existingCart = await shoppingCarts.findOne({ userId: userId });
         return res.status(200).json(existingCart);
@@ -106,12 +108,11 @@ const ShoppingCartsController = {
   removeFromCart: async (req, res) => {
     const userId = req.user.userId;
     const { courseId } = req.params;
-    // תיקון: ולידציה על courseId שמגיע מה-params
     if (!mongoose.Types.ObjectId.isValid(courseId)) {
       return res.status(400).json({ message: "Invalid course id" });
     }
     try {
-      //מציאת העגלה כדי לדעת מה המחיר של הקורס שאני רוצה למחוק
+      // שליפה מוקדמת של העגלה כדי לדעת את מחיר הקורס - הוא נדרש להורדת ה-subtotal
       const currentShoppingCart = await shoppingCarts.findOne({ userId: userId });
       if (!currentShoppingCart) return res.status(404).json({ message: "Shopping cart not found" });
       const courseToRemove = currentShoppingCart.courseList.find(
@@ -124,18 +125,16 @@ const ShoppingCartsController = {
       const updateShoppingCart = await shoppingCarts.findOneAndUpdate(
         { userId: userId },
         {
-          // מסיר את הפריט מהמערך courseList 
           $pull: {
             courseList: {
               courseId: new mongoose.Types.ObjectId(courseId),
             },
           },
-          // מוריד את מחיר הקורס מהסכום הכולל של העגלה
           $inc: { subtotal: -courseToRemove.price },
         },
         {
           new: true,
-          runValidators: true, // כדי לבצע ולידציה- זה לא קורה אוטומטית בעדכון
+          runValidators: true, // Mongoose לא מריץ ולידציה בעדכון אלא אם מבקשים במפורש
         }
       );
 
@@ -146,22 +145,6 @@ const ShoppingCartsController = {
   },
 
 };
- 
+
 
 export default ShoppingCartsController;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

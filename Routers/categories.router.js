@@ -1,6 +1,6 @@
 import express from "express";
-import jwtMiddleware from "../Middlewares/jwt.middleware.js"; // ייבוא ה-Middleware
-import isAdminMiddleware from "../Middlewares/isAdmin.middleware.js"; // ייבוא ה-Middleware
+import jwtMiddleware from "../Middlewares/jwt.middleware.js";
+import isAdminMiddleware from "../Middlewares/isAdmin.middleware.js";
 
 import CategoriesController from "../Controllers/category.controller.js";
 const CategoriesRouter = express.Router();

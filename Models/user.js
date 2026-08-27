@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 
 const { ObjectId } = mongoose.Schema.Types;
-//צריך????
+
+// משתמש המערכת. courseIds מקשר ל-courses ומתעדכן בעת יצירת הזמנה שהתשלום עליה הצליח (orders.controller)
 const UserSchema = mongoose.Schema({
   firstName: {
     type: String,
@@ -11,11 +12,13 @@ const UserSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  // ייחודי כדי למנוע שני חשבונות על אותה כתובת
   email: {
     type: String,
     required: true,
     unique: true,
   },
+  // מזהה ההתחברות בפועל, ולכן חייב להיות ייחודי
   userName: {
     type: String,
     required: true,
@@ -29,11 +32,13 @@ const UserSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  // ברירת המחדל user כדי שהרשמה ציבורית לא תוכל ליצור מנהל
   role: {
     type: String,
     enum: ["admin", "user"],
     default: "user",
   },
+  // הקורסים שהמשתמש רכש - מקור האמת לגישה לאזור "הקורסים שלי"
   courseIds: {
     type: [ObjectId],
     ref: "courses",

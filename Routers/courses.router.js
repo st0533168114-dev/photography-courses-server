@@ -5,6 +5,7 @@ import isAdminMiddleware from "../Middlewares/isAdmin.middleware.js";
 const CoursesRouter = express.Router();
 
 CoursesRouter.get("/", CoursesController.get);
+// חייב להירשם לפני /:id, אחרת "category" ייקלט כמזהה קורס
 CoursesRouter.get("/category/:id", CoursesController.getByCategoryId);
 CoursesRouter.get("/:id", CoursesController.getById);
 CoursesRouter.post("/", jwtMiddleware, isAdminMiddleware, CoursesController.post);

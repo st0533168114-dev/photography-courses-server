@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 const { ObjectId } = mongoose.Schema.Types;
+
+// תשלום המשויך להזמנה אחת ב-orders. נוצר אוטומטית ביצירת הזמנה, בלי ספק סליקה חיצוני
 const PaymentSchema = new mongoose.Schema({
   orderId: {
     type: ObjectId,
@@ -15,6 +17,7 @@ const PaymentSchema = new mongoose.Schema({
     enum: ["success", "failed"],
     default: "success",
   },
+  // מספר התשלום בתוך ההזמנה - כרגע תמיד 1 כי אין תשלומים מרובים
   paymentNumber: {
     type: Number,
     required: true,
@@ -24,6 +27,7 @@ const PaymentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // מזהה העסקה מול הסליקה - ייחודי כדי למנוע רישום כפול של אותו חיוב
   transactionId: {
     type: String,
     required: true,

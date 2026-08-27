@@ -60,7 +60,7 @@ const CoursesController = {
     try {
       const updatedCourse = await courses.findByIdAndUpdate(id, course, {
         new: true,
-        runValidators: true, // כדי לבצע ולידציה - זה לא קורה אוטומטית בעדכון
+        runValidators: true, // Mongoose לא מריץ ולידציה בעדכון אלא אם מבקשים במפורש
       });
 
       if (!updatedCourse) {
@@ -84,7 +84,6 @@ const CoursesController = {
       res.status(500).json({ error: error.message });
     }
   },
-//כרגע לא בשמוש
   getByCategoryId: async (req, res) => {
     const id = req.params.id;
     try {

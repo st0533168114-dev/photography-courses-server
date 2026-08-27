@@ -7,6 +7,7 @@ const UsersRouter = express.Router();
 UsersRouter.post("/login", UsersController.login);
 UsersRouter.post("/register", UsersController.post);
 
+// חייב להירשם לפני /:id, אחרת "profile" ייקלט כמזהה משתמש
 UsersRouter.get("/profile", jwtMiddleware, UsersController.getProfile);
 UsersRouter.get("/", jwtMiddleware, isAdminMiddleware, UsersController.get);
 UsersRouter.get("/:id", jwtMiddleware, isAdminMiddleware, UsersController.getById);

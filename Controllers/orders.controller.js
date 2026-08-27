@@ -7,7 +7,6 @@ import users from "../Models/user.js";
 import { createPayment } from "./payments.controller.js";
 
 const OrdersController = {
-  //כל ההזמנות עבור מנהל
   get: async (req, res) => {
     try {
       const filter = req.query.userId ? { userId: req.query.userId } : {};
@@ -24,7 +23,7 @@ const OrdersController = {
   },
   getUserOrders: async (req, res) => {
     try {
-      const userId = req.user.userId; // מגיע מהטוקן המפוענח ב-jwtMiddleware
+      const userId = req.user.userId; // מגיע מהטוקן המפוענח ב-jwtMiddleware ולא מהלקוח
 
       const userOrders = await orders.find({ userId: userId }).sort({ orderDate: -1 });
       res.status(200).json(userOrders);
@@ -53,30 +52,26 @@ const OrdersController = {
     }
   },
 
-  //  יצירת הזמנה אוטומטית מתוך עגלת הקניות הקיימת
+  // ההזמנה נבנית בשרת מתוך עגלת הקניות של המשתמש - גוף הבקשה אינו משמש
   post: async (req, res) => {
     try {
       const userId = req.user.userId;
-      // שליפת העגלה הנוכחית של המשתמש מהמסד
       const userCart = await shoppingCarts.findOne({ userId: userId });
       if (!userCart || userCart.courseList.length === 0) {
         return res.status(400).json({ message: "Cannot place an order with an empty cart" });
       }
 
-      // שליפת המחירים העדכניים מהמסד  
       const courseIds = userCart.courseList.map((item) => item.courseId);
-      const coursesFromDb = await courses.find({ _id: { $in: courseIds } });//שליפת הקורסים מהמסד לפי קודי הקורסים שבעגלה
+      const coursesFromDb = await courses.find({ _id: { $in: courseIds } });
 
-      // בדיקה שכל הקורסים עדיין זמינים לרכישה
       const unavailableCourse = coursesFromDb.find((course) => course.status !== "available");
       if (unavailableCourse) {
         return res.status(400).json({ message: `Course "${unavailableCourse.courseName}" is no longer available` });
       }
 
-     //יצירת אוביקט מאפ של זוגות-קוד ומחיר
       const priceByCourseId = new Map(coursesFromDb.map((course) => [course._id.toString(), course.price]));
 
-      // בניית רשימת הקורסים להזמנה עם המחיר העדכני מהמפה (ולא מהעגלה)
+      // המחיר נלקח מהמסד ולא מהעגלה, כדי שלקוח לא יוכל לשלוט במחיר ששולם
       const coursesList = userCart.courseList.map((item) => {
         const currentPrice = priceByCourseId.get(item.courseId.toString());
         if (currentPrice === undefined) {
@@ -84,7 +79,6 @@ const OrdersController = {
         }
         return { courseId: item.courseId, price: currentPrice };
       });
-      // חישוב הסכום הכולל מהמחירים העדכניים
       const totalAmount = coursesList.reduce((sum, course) => sum + course.price, 0);
 
       const newOrder = new orders({
@@ -104,17 +98,14 @@ const OrdersController = {
         transactionId: crypto.randomUUID(),
       });
 
-      // עדכון ההזמנה עם התשלום שנוצר, וסימון כהושלמה רק אם התשלום הצליח
-      // זהו שינוי חשוב כדי להבטיח שהזמנה חדשה לא תיכשל כי paymentsList עדיין לא מאותחל
       newOrder.paymentsList = newOrder.paymentsList || [];
       newOrder.paymentsList.push(paymentsResult._id);
       let updatedUser = null;
       if (paymentsResult.status === "success") {
         newOrder.status = "completed";
 
-        // יוצרים מערך של מזהי הקורסים שנרכשו מתוך ההזמנה
+        // הוספת הקורסים למשתמש היא מה שפותח לו את הגישה לקורס, ולכן קורית רק אחרי תשלום מוצלח
         const purchasedCourseIds = coursesList.map((course) => course.courseId);
-        // מעדכנים את המשתמש במסד כדי להוסיף את כל הקורסים החדשים ל-courseIds
         updatedUser = await users.findByIdAndUpdate(
           userId,
           {
@@ -149,7 +140,7 @@ const OrdersController = {
     try {
       const updatedOrder = await orders.findByIdAndUpdate(id, order, {
         new: true,
-        runValidators: true, // כדי לבצע ולידציה - זה לא קורה אוטומטית בעדכון
+        runValidators: true, // Mongoose לא מריץ ולידציה בעדכון אלא אם מבקשים במפורש
       });
 
       if (!updatedOrder) {
