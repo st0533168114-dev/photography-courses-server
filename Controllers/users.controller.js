@@ -106,10 +106,12 @@ const UsersController = {
       if (user.password) {
         user.password = await hashPassword(user.password);
       }
-      const updatedUser = await users.findByIdAndUpdate(id, user, {
-        new: true,
-        runValidators: true, // Mongoose לא מריץ ולידציה בעדכון אלא אם מבקשים במפורש
-      });
+      const updatedUser = await users
+        .findByIdAndUpdate(id, user, {
+          new: true,
+          runValidators: true,
+        })
+        .select("-password");
 
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
@@ -117,6 +119,12 @@ const UsersController = {
 
       res.status(200).json(updatedUser);
     } catch (error) {
+      if (error.code === 11000) {
+        const message = error.keyPattern?.email
+          ? "האימייל כבר קיים במערכת"
+          : "שם המשתמש כבר קיים במערכת";
+        return res.status(400).json({ message });
+      }
       res.status(500).json({ error: "User update failed" + error.message });
     }
   },
@@ -143,7 +151,10 @@ const UsersController = {
       : await bcrypt.compare(password, DUMMY_HASH);
 
     if (!user || !isValidPassword) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "שם משתמש או סיסמה שגויים" });
+    }
+    if (user.status === "inactive") {
+      return res.status(403).json({ message: "החשבון אינו פעיל. יש לפנות למנהל המערכת" });
     }
     const token = jwt.sign(
       {
