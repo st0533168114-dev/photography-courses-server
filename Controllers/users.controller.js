@@ -80,7 +80,7 @@ const UsersController = {
       res.status(201).json({
         token,
         user: {
-          id: newUser._id,
+          _id: newUser._id,
           firstName: newUser.firstName,
           lastName: newUser.lastName,
           email: newUser.email,
@@ -167,7 +167,7 @@ const UsersController = {
     res.json({
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
