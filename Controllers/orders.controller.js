@@ -25,7 +25,10 @@ const OrdersController = {
     try {
       const userId = req.user.userId; // מגיע מהטוקן המפוענח ב-jwtMiddleware ולא מהלקוח
 
-      const userOrders = await orders.find({ userId: userId }).sort({ orderDate: -1 });
+      const userOrders = await orders
+        .find({ userId: userId })
+        .populate("paymentsList")
+        .sort({ orderDate: -1 });
       res.status(200).json(userOrders);
     } catch (error) {
       res.status(500).json({ error: error.message });

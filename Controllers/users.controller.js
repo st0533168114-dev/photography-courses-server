@@ -8,6 +8,7 @@ const secretKey = process.env.JWT_SECRET;
 const DUMMY_HASH = "$2b$10$cvyu/pR27Zu4Y0L1H4Dp/u8KNKlHjvgKH9uJVk6vh9zQqMA6NEEkG";
 
 const SALT_ROUNDS = 10;
+const SELF_EDITABLE = ["firstName", "lastName", "email", "userName", "phoneNumber", "password"];
 const hashPassword = (password) => bcrypt.hash(password, SALT_ROUNDS);
 
 const UsersController = {
@@ -98,7 +99,10 @@ const UsersController = {
   
   put: async (req, res) => {
     const { id } = req.params;
-    const user = req.body;
+    const user =
+      req.user.role === "admin"
+        ? req.body
+        : Object.fromEntries(Object.entries(req.body).filter(([key]) => SELF_EDITABLE.includes(key)));
     try {
       if (req.user.userId !== id && req.user.role !== "admin") {
         return res.status(403).json({ message: "Forbidden" });
