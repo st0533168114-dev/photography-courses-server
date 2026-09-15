@@ -132,21 +132,6 @@ const UsersController = {
       res.status(500).json({ error: "User update failed" + error.message });
     }
   },
-  delete: async (req, res) => {
-    const id = req.params.id;
-    try {
-      if (req.user.userId !== id && req.user.role !== "admin") {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      const deletedUser = await users.findByIdAndDelete(id);
-      if (!deletedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.status(200).json(deletedUser);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  },
   login: async (req, res) => {
     const { userName, password } = req.body;
     const user = await users.findOne({ userName });

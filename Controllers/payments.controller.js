@@ -83,19 +83,6 @@ const PaymentsController = {
       res.status(400).json({ error: error.message });
     }
   },
-
-  delete: async (req, res) => {
-    const id = req.params.id;
-    try {
-      const deletedPayment = await payments.findByIdAndDelete(id);
-      if (!deletedPayment) {
-        return res.status(404).json({ message: "Payment not found" });
-      }
-      res.status(200).json(deletedPayment);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  },
 };
 
 export default PaymentsController;

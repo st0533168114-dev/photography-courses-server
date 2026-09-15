@@ -10,5 +10,4 @@ OrdersRouter.get("/user-orders", jwtMiddleware, OrdersController.getUserOrders);
 OrdersRouter.get("/:id", jwtMiddleware, OrdersController.getById);
 OrdersRouter.post("/", jwtMiddleware, OrdersController.post);
 OrdersRouter.put("/:id", jwtMiddleware, isAdminMiddleware, OrdersController.put);
-OrdersRouter.delete("/:id", jwtMiddleware, isAdminMiddleware, OrdersController.delete);
 export default OrdersRouter;

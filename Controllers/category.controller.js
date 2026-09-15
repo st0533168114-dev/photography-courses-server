@@ -61,7 +61,9 @@ const CategoriesController = {
       // חסימת המחיקה כדי לא להשאיר קורסים שמצביעים על קטגוריה שאינה קיימת
       const coursesCount = await courses.countDocuments({ categoryId: id });
       if (coursesCount > 0) {
-        return res.status(400).json({ message: "לא ניתן למחוק קטגוריה שיש בה קורסים" });
+        return res.status(409).json({
+          message: `לא ניתן למחוק קטגוריה שיש בה ${coursesCount === 1 ? "קורס אחד" : `${coursesCount} קורסים`}`,
+        });
       }
 
       const deletedCategory = await categories.findByIdAndDelete(id);

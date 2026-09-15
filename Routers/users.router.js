@@ -13,5 +13,4 @@ UsersRouter.get("/", jwtMiddleware, isAdminMiddleware, UsersController.get);
 UsersRouter.get("/:id", jwtMiddleware, isAdminMiddleware, UsersController.getById);
 UsersRouter.post("/", UsersController.post);
 UsersRouter.put("/:id", jwtMiddleware, UsersController.put);
-UsersRouter.delete("/:id", jwtMiddleware, UsersController.delete);
 export default UsersRouter;

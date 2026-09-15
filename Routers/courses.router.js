@@ -9,6 +9,7 @@ CoursesRouter.get("/", CoursesController.get);
 CoursesRouter.get("/category/:id", CoursesController.getByCategoryId);
 CoursesRouter.get("/:id", CoursesController.getById);
 CoursesRouter.post("/", jwtMiddleware, isAdminMiddleware, CoursesController.post);
+CoursesRouter.put("/:id/status", jwtMiddleware, isAdminMiddleware, CoursesController.changeStatus);
 CoursesRouter.put("/:id", jwtMiddleware, isAdminMiddleware, CoursesController.put);
 CoursesRouter.delete("/:id", jwtMiddleware, isAdminMiddleware, CoursesController.delete);
 

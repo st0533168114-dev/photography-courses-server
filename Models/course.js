@@ -26,10 +26,11 @@ const CourseSchema = mongoose.Schema({
     required: true,
   },
   // קורס שאינו available נחסם לרכישה ביצירת הזמנה (orders.controller)
+  // draft הוא מצב התחלתי שאיש לא מצביע עליו, ולכן המצב היחיד שממנו מותרת מחיקה קשיחה
   status: {
     type: String,
-    enum: ["available", "notAvailable"],
-    default: "available",
+    enum: ["draft", "available", "notAvailable", "archived"],
+    default: "draft",
   },
   courseDescription: {
     type: String,

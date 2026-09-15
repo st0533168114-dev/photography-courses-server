@@ -69,7 +69,9 @@ const OrdersController = {
 
       const unavailableCourse = coursesFromDb.find((course) => course.status !== "available");
       if (unavailableCourse) {
-        return res.status(400).json({ message: `Course "${unavailableCourse.courseName}" is no longer available` });
+        return res
+          .status(400)
+          .json({ message: `הקורס "${unavailableCourse.courseName}" אינו זמין לרכישה כעת` });
       }
 
       const priceByCourseId = new Map(coursesFromDb.map((course) => [course._id.toString(), course.price]));
@@ -151,18 +153,6 @@ const OrdersController = {
       }
 
       res.status(200).json(updatedOrder);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-  delete: async (req, res) => {
-    const id = req.params.id;
-    try {
-      const deleteOrder = await orders.findByIdAndDelete(id);
-      if (!deleteOrder) {
-        return res.status(404).json({ message: "Order not found" });
-      }
-      res.status(200).json(deleteOrder);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

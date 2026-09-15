@@ -35,7 +35,7 @@ const OrderSchema = new mongoose.Schema({
   // ההזמנה נוצרת כ-incomplete ומסומנת completed רק אחרי תשלום שהצליח
   status: {
     type: String,
-    enum: ["completed", "incomplete"],
+    enum: ["completed", "incomplete", "cancelled", "refunded"],
     default: "incomplete",
   },
 });
