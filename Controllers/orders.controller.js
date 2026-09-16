@@ -77,6 +77,17 @@ const OrdersController = {
         return res.status(400).json({ message: "Cannot place an order with an empty cart" });
       }
 
+      const buyer = await users.findById(userId).select("courseIds");
+      const ownedCourseIds = (buyer?.courseIds || []).map((id) => id.toString());
+      const alreadyOwnedCourse = resolvedCart.courseList.find((item) =>
+        ownedCourseIds.includes(item.courseId.toString())
+      );
+      if (alreadyOwnedCourse) {
+        return res
+          .status(400)
+          .json({ message: `הקורס "${alreadyOwnedCourse.courseName}" כבר נרכש` });
+      }
+
       const coursesList = resolvedCart.courseList.map((item) => ({
         courseId: item.courseId,
         price: item.price,
@@ -111,7 +122,7 @@ const OrdersController = {
         updatedUser = await users.findByIdAndUpdate(
           userId,
           {
-            $push: {
+            $addToSet: {
               courseIds: {
                 $each: purchasedCourseIds,
               },
@@ -132,6 +143,7 @@ const OrdersController = {
         user: updatedUser,
       });
     } catch (error) {
+      console.error(error);
       res.status(500).json({ error: error.message });
     }
   },

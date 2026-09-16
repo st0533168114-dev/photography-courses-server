@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import shoppingCarts from "../Models/shoppingCart.js";
 import course from "../Models/course.js";
+import users from "../Models/user.js";
 import { resolveCart } from "../Services/shoppingCart.service.js";
 
 const ShoppingCartsController = {
@@ -71,6 +72,12 @@ const ShoppingCartsController = {
         return res.status(400).json({ message: "הקורס אינו זמין לרכישה כעת" });
       }
 
+      const buyer = await users.findById(userId).select("courseIds");
+      const isOwned = (buyer?.courseIds || []).some((id) => id.toString() === courseId);
+      if (isOwned) {
+        return res.status(400).json({ message: "הקורס כבר נרכש" });
+      }
+
       // יצירת העגלה מופרדת מההוספה: upsert יחד עם תנאי ה-$ne שלמטה היה יוצר עגלה נוספת
       // כשהקורס כבר קיים, במקום להימנע מהוספה
       await shoppingCarts.findOneAndUpdate(
@@ -97,8 +104,7 @@ const ShoppingCartsController = {
 
       // תוצאה ריקה כאן משמעותה שהתנאי לא התקיים, כלומר הקורס כבר בעגלה
       if (!updatedCart) {
-        const existingCart = await shoppingCarts.findOne({ userId: userId });
-        return res.status(200).json(await resolveCart(existingCart));
+        return res.status(400).json({ message: "הקורס כבר נמצא בסל" });
       }
 
       return res.status(200).json(await resolveCart(updatedCart));
