@@ -58,6 +58,8 @@ Server/
 │   ├── shoppingCarts.controller.js
 │   ├── payments.controller.js
 │   └── faq.controller.js
+├── Services/
+│   └── shoppingCart.service.js
 ├── Middlewares/
 │   ├── jwt.middleware.js
 │   └── isAdmin.middleware.js
@@ -131,8 +133,9 @@ Server/
 | שדה | סוג | חובה | הערות |
 |-----|-----|------|-------|
 | userId | ObjectId | כן | ref: users |
-| subtotal | Number | כן | ברירת מחדל: 0 |
-| courseList | [{ courseId, courseName, price, courseImage }] | לא | |
+| courseList | [{ courseId, price }] | לא | `price` הוא המחיר מרגע ההוספה, ומשמש רק לזיהוי שינוי מחיר |
+
+העגלה שומרת כוונות בלבד. שם, תמונה, מחיר עדכני, זמינות ו-`subtotal` לא נשמרים — `resolveCart` ב-`Services/shoppingCart.service.js` גוזר אותם מ-`courses` בכל תשובה שמחזירה עגלה. כל פריט בתשובה: `{ courseId, courseName, price, courseImage, isAvailable, previousPrice? }`, ו-`subtotal` סופר זמינים בלבד. `POST /orders` משתמש באותה פונקציה.
 
 ### 5.6 Payment
 

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import shoppingCarts from "../Models/shoppingCart.js";
 import course from "../Models/course.js";
+import { resolveCart } from "../Services/shoppingCart.service.js";
 
 const ShoppingCartsController = {
 
@@ -22,7 +23,7 @@ const ShoppingCartsController = {
       if (!shoppingCart) {
         return res.status(200).json({ userId, subtotal: 0, courseList: [] });
       }
-      res.status(200).json(shoppingCart);
+      res.status(200).json(await resolveCart(shoppingCart));
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Failed to fetch shopping cart" });
@@ -35,8 +36,8 @@ const ShoppingCartsController = {
     try {
       const updateShoppingCart = await shoppingCarts.findOneAndUpdate(
         { userId: userId },
-        // איפוס השדות במקום מחיקת המסמך, כדי שהמשתמש ימשיך להחזיק באותה עגלה
-        { $set: { courseList: [], subtotal: 0 } },
+        // איפוס הרשימה במקום מחיקת המסמך, כדי שהמשתמש ימשיך להחזיק באותה עגלה
+        { $set: { courseList: [] } },
         {
           new: true,
           runValidators: true,
@@ -66,11 +67,15 @@ const ShoppingCartsController = {
         return res.status(404).json({ message: "Course not found" });
       }
 
+      if (courseDetails.status !== "available") {
+        return res.status(400).json({ message: "הקורס אינו זמין לרכישה כעת" });
+      }
+
       // יצירת העגלה מופרדת מההוספה: upsert יחד עם תנאי ה-$ne שלמטה היה יוצר עגלה נוספת
       // כשהקורס כבר קיים, במקום להימנע מהוספה
       await shoppingCarts.findOneAndUpdate(
         { userId: userId },
-        { $setOnInsert: { userId: userId, courseList: [], subtotal: 0 } },
+        { $setOnInsert: { userId: userId, courseList: [] } },
         { upsert: true }
       );
 
@@ -83,12 +88,9 @@ const ShoppingCartsController = {
           $push: {
             courseList: {
               courseId: courseId,
-              courseName: courseDetails.courseName,
               price: courseDetails.price,
-              courseImage: courseDetails.courseImage,
             },
           },
-          $inc: { subtotal: courseDetails.price },
         },
         { new: true }
       );
@@ -96,10 +98,10 @@ const ShoppingCartsController = {
       // תוצאה ריקה כאן משמעותה שהתנאי לא התקיים, כלומר הקורס כבר בעגלה
       if (!updatedCart) {
         const existingCart = await shoppingCarts.findOne({ userId: userId });
-        return res.status(200).json(existingCart);
+        return res.status(200).json(await resolveCart(existingCart));
       }
 
-      return res.status(200).json(updatedCart);
+      return res.status(200).json(await resolveCart(updatedCart));
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Add to cart failed" });
@@ -112,14 +114,13 @@ const ShoppingCartsController = {
       return res.status(400).json({ message: "Invalid course id" });
     }
     try {
-      // שליפה מוקדמת של העגלה כדי לדעת את מחיר הקורס - הוא נדרש להורדת ה-subtotal
       const currentShoppingCart = await shoppingCarts.findOne({ userId: userId });
       if (!currentShoppingCart) return res.status(404).json({ message: "Shopping cart not found" });
-      const courseToRemove = currentShoppingCart.courseList.find(
+      const isInCart = currentShoppingCart.courseList.some(
         (course) => course.courseId.toString() === courseId
       );
 
-      if (!courseToRemove) {
+      if (!isInCart) {
         return res.status(404).json({ message: "Course not found in cart" });
       }
       const updateShoppingCart = await shoppingCarts.findOneAndUpdate(
@@ -130,7 +131,6 @@ const ShoppingCartsController = {
               courseId: new mongoose.Types.ObjectId(courseId),
             },
           },
-          $inc: { subtotal: -courseToRemove.price },
         },
         {
           new: true,
@@ -138,7 +138,7 @@ const ShoppingCartsController = {
         }
       );
 
-      res.status(200).json(updateShoppingCart);
+      res.status(200).json(await resolveCart(updateShoppingCart));
     } catch (error) {
       res.status(500).json({ error: "remove from cart failed" + error });
     }

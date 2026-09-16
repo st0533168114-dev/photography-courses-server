@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 import orders from "../Models/order.js";
 import shoppingCarts from "../Models/shoppingCart.js";
-import courses from "../Models/course.js";
 import users from "../Models/user.js";
 import { createPayment } from "./payments.controller.js";
+import { resolveCart } from "../Services/shoppingCart.service.js";
 
 const OrdersController = {
   get: async (req, res) => {
@@ -64,27 +64,24 @@ const OrdersController = {
         return res.status(400).json({ message: "Cannot place an order with an empty cart" });
       }
 
-      const courseIds = userCart.courseList.map((item) => item.courseId);
-      const coursesFromDb = await courses.find({ _id: { $in: courseIds } });
+      const resolvedCart = await resolveCart(userCart);
 
-      const unavailableCourse = coursesFromDb.find((course) => course.status !== "available");
+      const unavailableCourse = resolvedCart.courseList.find((item) => !item.isAvailable);
       if (unavailableCourse) {
         return res
           .status(400)
           .json({ message: `הקורס "${unavailableCourse.courseName}" אינו זמין לרכישה כעת` });
       }
 
-      const priceByCourseId = new Map(coursesFromDb.map((course) => [course._id.toString(), course.price]));
+      if (resolvedCart.courseList.length === 0) {
+        return res.status(400).json({ message: "Cannot place an order with an empty cart" });
+      }
 
-      // המחיר נלקח מהמסד ולא מהעגלה, כדי שלקוח לא יוכל לשלוט במחיר ששולם
-      const coursesList = userCart.courseList.map((item) => {
-        const currentPrice = priceByCourseId.get(item.courseId.toString());
-        if (currentPrice === undefined) {
-          throw new Error(`Course ${item.courseId} not found`);
-        }
-        return { courseId: item.courseId, price: currentPrice };
-      });
-      const totalAmount = coursesList.reduce((sum, course) => sum + course.price, 0);
+      const coursesList = resolvedCart.courseList.map((item) => ({
+        courseId: item.courseId,
+        price: item.price,
+      }));
+      const totalAmount = resolvedCart.subtotal;
 
       const newOrder = new orders({
         userId: userId,
@@ -122,9 +119,9 @@ const OrdersController = {
           },
           { new: true }
         ).select("-password");
-            if (!updatedUser) {
-      throw new Error("User not found");
-    }
+        if (!updatedUser) {
+          throw new Error("User not found");
+        }
       }
 
       await newOrder.save();
@@ -132,7 +129,7 @@ const OrdersController = {
       res.status(201).json({
         order: newOrder,
         payments: paymentsResult,
-        user: updatedUser ,
+        user: updatedUser,
       });
     } catch (error) {
       res.status(500).json({ error: error.message });
