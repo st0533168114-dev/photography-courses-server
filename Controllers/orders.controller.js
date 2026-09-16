@@ -90,6 +90,7 @@ const OrdersController = {
 
       const coursesList = resolvedCart.courseList.map((item) => ({
         courseId: item.courseId,
+        courseName: item.courseName,
         price: item.price,
       }));
       const totalAmount = resolvedCart.subtotal;

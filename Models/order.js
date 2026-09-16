@@ -8,11 +8,12 @@ const OrderSchema = new mongoose.Schema({
     ref: "users",
     required: true,
   },
-  // המחיר נשמר כאן כעותק מרגע הרכישה, כדי ששינוי מחיר קורס בעתיד לא ישנה הזמנות ישנות
+  // המחיר והשם נשמרים כאן כעותק מרגע הרכישה, כדי ששינוי בקורס בעתיד לא ישנה הזמנות ישנות
   coursesList: {
     type: [
       {
         courseId: { type: ObjectId, ref: "courses" },
+        courseName: String,
         price: Number,
       },
     ],

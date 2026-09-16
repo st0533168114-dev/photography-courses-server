@@ -122,7 +122,7 @@ Server/
 | שדה | סוג | חובה | הערות |
 |-----|-----|------|-------|
 | userId | ObjectId | כן | ref: users |
-| coursesList | [{ courseId, price }] | כן | |
+| coursesList | [{ courseId, courseName, price }] | כן | שם ומחיר מוקפאים מרגע הרכישה |
 | totalAmount | Number | כן | |
 | paymentsList | [ObjectId] | לא | ref: payments |
 | orderDate | Date | לא | ברירת מחדל: Date.now |
@@ -212,7 +212,7 @@ Server/
 |--------|----------|------|-------|
 | GET | `/shoppingCarts/admin/all` | פתוח | כל עגלות הקניות (אדמין) |
 | GET | `/shoppingCarts/` | JWT | עגלת הקניות של המשתמש המחובר |
-| POST | `/shoppingCarts/items` | JWT | הוספת קורס לעגלה |
+| POST | `/shoppingCarts/items` | JWT | הוספת קורס לעגלה. 400 אם הקורס לא זמין, כבר נרכש או כבר בעגלה |
 | DELETE | `/shoppingCarts/items/:courseId` | JWT | הסרת קורס מהעגלה |
 
 ### 6.6 Payments – `/payments`
