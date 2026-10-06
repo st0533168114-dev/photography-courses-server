@@ -133,40 +133,50 @@ const UsersController = {
     }
   },
   login: async (req, res) => {
-    const { userName, password } = req.body;
-    const user = await users.findOne({ userName });
-    const isValidPassword = user
-      ? await bcrypt.compare(password, user.password)
-      : await bcrypt.compare(password, DUMMY_HASH);
+    const { userName, password } = req.body ?? {};
 
-    if (!user || !isValidPassword) {
-      return res.status(401).json({ message: "שם משתמש או סיסמה שגויים" });
+    // בדיקת סוג ולא רק קיום: אובייקט כמו { "$ne": null } היה עובר לשאילתה של Mongo כאופרטור
+    if (typeof userName !== "string" || typeof password !== "string" || !userName || !password) {
+      return res.status(400).json({ message: "יש להזין שם משתמש וסיסמה" });
     }
-    if (user.status === "inactive") {
-      return res.status(403).json({ message: "החשבון אינו פעיל. יש לפנות למנהל המערכת" });
+
+    try {
+      const user = await users.findOne({ userName });
+      const isValidPassword = user
+        ? await bcrypt.compare(password, user.password)
+        : await bcrypt.compare(password, DUMMY_HASH);
+
+      if (!user || !isValidPassword) {
+        return res.status(401).json({ message: "שם משתמש או סיסמה שגויים" });
+      }
+      if (user.status === "inactive") {
+        return res.status(403).json({ message: "החשבון אינו פעיל. יש לפנות למנהל המערכת" });
+      }
+      const token = jwt.sign(
+        {
+          userId: user._id,
+          role: user.role,
+        },
+        secretKey,
+        { expiresIn: "2h" }
+      );
+      res.json({
+        token,
+        user: {
+          _id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          userName: user.userName,
+          phoneNumber: user.phoneNumber,
+          courseIds: user.courseIds,
+          role: user.role,
+          status: user.status,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        role: user.role,
-      },
-      secretKey,
-      { expiresIn: "2h" }
-    );
-    res.json({
-      token,
-      user: {
-        _id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        userName: user.userName,
-        phoneNumber: user.phoneNumber,
-        courseIds: user.courseIds,
-        role: user.role,
-        status: user.status,
-      },
-    });
   },
 };
 export default UsersController;
